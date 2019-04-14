@@ -7,8 +7,8 @@ using UnityEngine;
 
 public class NewBehaviourScript : MonoBehaviour
 {
-    private const int width = 20;
-    private const int height = 20;
+    private const int width = 30;
+    private const int height = 30;
     private const int wallNum = width * height;
     private const int interval = 15;
 
@@ -24,9 +24,7 @@ public class NewBehaviourScript : MonoBehaviour
 
     public Hashtable openList;
     public Stack<Node> closeList;
-	Queue<Node> nodes = new Queue<Node>();
-    private Node targetNode = null;
-    private Node branchNode = null;
+    List<Node> nodes = new List<Node>();
 
 	private void createList()
 	{
@@ -48,7 +46,6 @@ public class NewBehaviourScript : MonoBehaviour
 				allGrid[i, t].transform.position = new Vector3(i * interval, 0, t * interval);
 				allGrid[i, t].xIndex = i;
 				allGrid[i, t].yIndex = t;
-				//allGrid[i, t].transform.name =""+ i + "," + t;
 				allGrid[i, t].transform.name = string.Format("{0},{1}", i, t);
 
 			}
@@ -61,11 +58,7 @@ public class NewBehaviourScript : MonoBehaviour
 		for (int i = 0; i < width * height; i++)
 		{
 			var grid = allGrid[(int)(i / width), (int)(i % height)];
-			if (wallObjList.Contains(grid))
-			{
-				//closeList.Push(grid);
-			}
-			else
+			if (!wallObjList.Contains(grid))
 			{
 				if (!object.ReferenceEquals(grid, startNode))
 				{
@@ -85,6 +78,11 @@ public class NewBehaviourScript : MonoBehaviour
 		{
 			wallObjList.Add(allGrid[4, i]);
 		}
+		for (int i = 6; i <= 8; i++)
+		{
+			wallObjList.Add(allGrid[10, i]);
+		}
+
 		for (int i = 4; i < 9; i++)
 		{
 			wallObjList.Add(allGrid[6, i]);
@@ -94,6 +92,13 @@ public class NewBehaviourScript : MonoBehaviour
 		{
 			wallObjList.Add(allGrid[i, 11]);
 		}
+
+		for (int i = 8; i < 10; i++)
+		{
+			wallObjList.Add(allGrid[i, 6]);
+		}
+
+
 		for (int i = 4; i < 14; i++)
 		{
 			wallObjList.Add(allGrid[i, 2]);
@@ -113,7 +118,7 @@ public class NewBehaviourScript : MonoBehaviour
 		{
 			wallObjList.Add(allGrid[i, 4]);
 		}
-
+        wallObjList.Add(allGrid[8, 7]);
 		for (int i = 0; i < wallObjList.Count; i++)
 		{
 			wallObjList[i].GetComponent<Renderer>().material.color = wellColor;
@@ -127,8 +132,8 @@ public class NewBehaviourScript : MonoBehaviour
         createList();
 		initAllGrid();
 
-        startNode = allGrid[17,16];
-        endNode = allGrid[7, 8];
+        startNode = allGrid[5, 0];
+        endNode = allGrid[9, 7];
         curStartNode = startNode;
         startNode.GetComponent<Renderer>().material.color = startColor;
         endNode.GetComponent<Renderer>().material.color = endColor;
@@ -136,28 +141,21 @@ public class NewBehaviourScript : MonoBehaviour
         initCloseListAndOpenList();
     }
 
-
-
-
-
-
-
-
     void Start () {
         handle();
-		//foreach(var node in nodes){
-        //    node.GetComponent<Renderer>().material.color = Color.green;
-        //}
+		foreach(var node in nodes){
+            node.GetComponent<Renderer>().material.color = Color.green;
+        }
     }
 
 
 
     private void handle()
     {
-        Queue<Node> curList = calCurrentGoGrid(curStartNode);
-        string[] args = new string[] { "all", "up", "endDistance", "up" };
-        curList = sortOn(curList, args);
-
+        List<Node> list = calCurrentGoGrid(curStartNode);
+        string[] args = new string[] { "all", "up","endDistance","up"};
+        var curList = list.ToArray();
+        sortOn(curList, args);
 		if (openList.Count == 0)
         {
             return;
@@ -166,74 +164,38 @@ public class NewBehaviourScript : MonoBehaviour
         {
             return;
         }
-		Node firstStep = null;
-		if (curList.Count > 0)
+		
+        Node firstStep = null;
+        if (curList.Length > 0)
 		{
-			firstStep = curList.Dequeue();
+			firstStep = curList[0];
 		}
 
-
-        if (branchNode != null && openList.Contains(string.Format("{0},{1}",branchNode.xIndex,branchNode.yIndex)) && firstStep != null &&firstStep.all > branchNode.all){
-
-   //         var array = nodes.ToArray();
-   //         var list = new List<Node>(array);
-   //         for (int i = list.Count - 1; i >= 0; i--)
-			//{
-				
-   //             if (object.ReferenceEquals(list[i], targetNode))
-   //             {
-   //                 list[i].GetComponent<Renderer>().material.color = Color.blue;
-			//		list.Remove(list[i]);
-   //                 break;
-   //             }
-   //             list[i].GetComponent<Renderer>().material.color = Color.blue;
-			//	list.Remove(list[i]);
-			//}
-            //nodes = new Queue<Node>(list.ToArray());
-
-			curStartNode = targetNode;
-			branchNode = null;
-            targetNode = null;
-        }        
-        else
-        {
-			if (firstStep != null && isCanGoNode(firstStep, curStartNode))
+        if (firstStep != null && isCanGoNode(firstStep, curStartNode))
+		{
+            curStartNode = firstStep;
+			closeList.Push(curStartNode);
+			var key = String.Format("{0},{1}", firstStep.xIndex, firstStep.yIndex);
+            openList.Remove(key);
+			curStartNode.GetComponent<Renderer>().material.color = startColor;
+            nodes.Add(curStartNode);
+		}
+		else
+		{
+            if(closeList.Count == 0){
+                Debug.Log("不是通路");
+                return;
+            }
+			if (nodes.Count > 0)
 			{
-                if (curList.Count > 0){
-                    if (firstStep.all == curList.Peek().all){
-                        if (branchNode == null || (branchNode != null && branchNode.all > curList.Peek().all)){
-                            targetNode = firstStep;
-                            branchNode = curList.Peek();
-							branchNode.GetComponent<Renderer>().material.color = Color.blue;                     
-                        }
-					}
-
-                }
-                curStartNode = firstStep;
-				closeList.Push(curStartNode);
-				var key = String.Format("{0},{1}", firstStep.xIndex, firstStep.yIndex);
-                openList.Remove(key);
-
-				curStartNode.GetComponent<Renderer>().material.color = startColor;
-				nodes.Enqueue(curStartNode);
+                nodes.RemoveAt(nodes.Count-1);
 			}
-			else
-			{
-                if(closeList.Count == 0){
-                    Debug.Log("不是通路");
-                    return;
-                }
-				if (nodes.Count > 0)
-				{
-					nodes.Dequeue();
-				}
-				var node = closeList.Pop();
-				curStartNode.GetComponent<Renderer>().material.color = Color.cyan;
-				curStartNode = node;
-			}
-        }
-		//handle();
-		Invoke("handle", 0.1f);
+			var node = closeList.Pop();
+			curStartNode.GetComponent<Renderer>().material.color = Color.cyan;
+			curStartNode = node;
+		}
+		handle();
+		//Invoke("handle", 0.1f);
     }
 
 
@@ -246,54 +208,56 @@ public class NewBehaviourScript : MonoBehaviour
         return value <= 14;
     }
 
-    private void initTestValue(ref Queue<Node> testQueue)
+    private void initTestValue(ref List<Node> testList)
     {
-        foreach (var openInfo in testQueue)
+        foreach (var openInfo in testList)
         {
             if (openInfo != null)
             {
-				var xValueM = (startNode.xIndex - openInfo.xIndex) * (startNode.xIndex - openInfo.xIndex);
-				var yValueM = (startNode.yIndex - openInfo.yIndex) * (startNode.yIndex - openInfo.yIndex);
-				var difXY = Mathf.Sqrt(xValueM + yValueM);
-				var argXValue = (endNode.xIndex - openInfo.xIndex) * (endNode.xIndex - openInfo.xIndex);
-				var argYValue = (endNode.yIndex - openInfo.yIndex) * (endNode.yIndex - openInfo.yIndex);
-				var difArgXY = Mathf.Sqrt(argXValue + argYValue);
-				var arg = (int)difArgXY / difXY;
-				openInfo.distance = (int)(Mathf.Sqrt(xValueM + yValueM) * arg * 10);
+                var xValueM = (startNode.xIndex - openInfo.xIndex) * (startNode.xIndex - openInfo.xIndex);
+                var yValueM = (startNode.yIndex - openInfo.yIndex) * (startNode.yIndex - openInfo.yIndex);
+                var difXY = Mathf.Sqrt(xValueM + yValueM);
+                var argXValue = (endNode.xIndex - openInfo.xIndex) * (endNode.xIndex - openInfo.xIndex);
+                var argYValue = (endNode.yIndex - openInfo.yIndex) * (endNode.yIndex - openInfo.yIndex);
+                var difArgXY = Mathf.Sqrt(argXValue + argYValue);
+                var arg = (int)difArgXY / difXY;
+                openInfo.distance = (int)(Mathf.Sqrt(xValueM + yValueM) * arg * 10);
 
                 openInfo.endDistance = (Mathf.Abs(endNode.xIndex - openInfo.xIndex) + Mathf.Abs(endNode.yIndex - openInfo.yIndex)) * 10;
                 openInfo.all = openInfo.distance + openInfo.endDistance;
+
+                openInfo.ceng = Mathf.Abs(startNode.xIndex - openInfo.xIndex) + Mathf.Abs(startNode.yIndex - openInfo.yIndex);
                 openInfo.setDisplay();
             }
         }
     }
 
-    Queue<Node> calCurrentGoGrid(Node _startNode)
+    List<Node> calCurrentGoGrid(Node _startNode)
     {
-        Queue<Node> testQueue = new Queue<Node>();
-        var x = _startNode.xIndex - 1;
-        var y = _startNode.yIndex - 1;
-        var xWidth = _startNode.xIndex + 1;
-        var yWidth = _startNode.yIndex + 1;
-        while (x <= xWidth)
-        {
-            y = _startNode.yIndex - 1;
-            while (y <= yWidth)
-            {
-                if (x >= 0 && y >= 0 && x < width && y < height && allGrid[x, y] != null && _startNode != allGrid[x, y])
-                {
-                    string str = String.Format("{0},{1}", x, y);
-                    if (openList.ContainsKey(str))
-                    {
-                        testQueue.Enqueue(allGrid[x, y]);
-                    }
-                }
-                y++;
-            }
-            x++;
-        }
-        initTestValue(ref testQueue);
-        return testQueue;
+		List<Node> test = new List<Node>();
+		var x = _startNode.xIndex - 1;
+		var y = _startNode.yIndex - 1;
+		var xWidth = _startNode.xIndex + 1;
+		var yWidth = _startNode.yIndex + 1;
+		while (x <= xWidth)
+		{
+			y = _startNode.yIndex - 1;
+			while (y <= yWidth)
+			{
+				if (x >= 0 && y >= 0 && x < width && y < height && allGrid[x, y] != null && _startNode != allGrid[x, y])
+				{
+					string str = String.Format("{0},{1}", x, y);
+					if (openList.ContainsKey(str))
+					{
+                        test.Add(allGrid[x, y]);
+					}
+				}
+				y++;
+			}
+			x++;
+		}
+		initTestValue(ref test);
+		return test;
     }
 
 
@@ -310,15 +274,12 @@ public class NewBehaviourScript : MonoBehaviour
         return null;
     }
 
-    Queue<T> sortOn<T>(Queue<T> array,string [] tags) 
+    void sortOn<T>(T [] array,string [] tags) 
     {
         var _left = 0;
-        var _right = array.Count - 1;
-        
-        var currentArray = array.ToArray();
-        quickSort(currentArray, _left,_right,tags);
-        var _array = new Queue<T>(currentArray);
-        return _array;
+        var _right = array.Length - 1;
+        quickSort(array, _left,_right,tags);
+
     }
 
     private void quickSort<T>(T[] array, int left, int right, string [] tags)
@@ -330,12 +291,10 @@ public class NewBehaviourScript : MonoBehaviour
             int j = right;
             while (i != j)
             {
-                //while (i < j && (int)GetPropertyValue(array[j], tag) >= (int)GetPropertyValue(temp, tag))
                 while (i < j && HandleTags(array[j], temp, tags))
                 {
                     j--;
                 }
-                //while (i < j && (int)GetPropertyValue(array[i], tag) <= (int)GetPropertyValue(temp, tag))
                 while (i < j && HandleTags(temp, array[i], tags))
                 {
                     i++;

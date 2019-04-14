@@ -11,6 +11,7 @@ public class Node
     public int all;
     public int distance;
     public int endDistance;
+    public int ceng;
 
     public int xIndex;
     public int yIndex;
@@ -47,11 +48,13 @@ public class Node
         }
         var text = GetChildComponent(objPrefabTrans, "Text", "Text") as Text;
         var text1 = GetChildComponent(objPrefabTrans, "Text (1)", "Text") as Text;
-        var text2 = GetChildComponent(objPrefabTrans, "Text (2)", "Text") as Text;
+		var text2 = GetChildComponent(objPrefabTrans, "Text (2)", "Text") as Text;
+		var text3 = GetChildComponent(objPrefabTrans, "Text (3)", "Text") as Text;
 
         text.text = all.ToString();
         text1.text = distance.ToString();
         text2.text = endDistance.ToString();
+        text3.text = ceng.ToString();
     }
 
     private Component GetChildComponent(Transform tar, string childName, string comName)
