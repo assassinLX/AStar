@@ -5,9 +5,10 @@ using System.ComponentModel;
 using System.Reflection;
 using UnityEngine;
 
-public class NewBehaviourScript : MonoBehaviour {
-    private const int width = 12;
-    private const int height = 12;
+public class NewBehaviourScript : MonoBehaviour
+{
+    private const int width = 20;
+    private const int height = 20;
     private const int wallNum = width * height;
     private const int interval = 15;
 
@@ -20,91 +21,144 @@ public class NewBehaviourScript : MonoBehaviour {
     public Color endColor = Color.yellow;
     public Color wellColor = Color.black;
     public List<Node> wallObjList;
-    
+
     public Hashtable openList;
     public Stack<Node> closeList;
+	Queue<Node> nodes = new Queue<Node>();
+    private Node targetNode = null;
+    private Node branchNode = null;
 
-    Queue<Node> nodes = new Queue<Node>();
+	private void createList()
+	{
+		allGrid = new Node[width, height];
+		wallObjList = new List<Node>();
+		closeList = new Stack<Node>();
+		openList = new Hashtable();
+	}
+
+
+
+	private void initAllGrid()
+	{
+		for (int i = 0; i < width; i++)
+		{
+			for (int t = 0; t < height; t++)
+			{
+				allGrid[i, t] = new Node(GameObject.CreatePrimitive(PrimitiveType.Plane));
+				allGrid[i, t].transform.position = new Vector3(i * interval, 0, t * interval);
+				allGrid[i, t].xIndex = i;
+				allGrid[i, t].yIndex = t;
+				//allGrid[i, t].transform.name =""+ i + "," + t;
+				allGrid[i, t].transform.name = string.Format("{0},{1}", i, t);
+
+			}
+		}
+	}
+
+	private void initCloseListAndOpenList()
+	{
+		//添加不能走的格子
+		for (int i = 0; i < width * height; i++)
+		{
+			var grid = allGrid[(int)(i / width), (int)(i % height)];
+			if (wallObjList.Contains(grid))
+			{
+				//closeList.Push(grid);
+			}
+			else
+			{
+				if (!object.ReferenceEquals(grid, startNode))
+				{
+					string str = String.Format("{0},{1}", (int)(i / width), (int)(i % height));
+					openList.Add(str, grid);
+				}
+
+			}
+		}
+	}
+
+
+	private void initWall()
+	{
+		wallObjList.Add(allGrid[1, 1]);
+		for (int i = 3; i <= 11; i++)
+		{
+			wallObjList.Add(allGrid[4, i]);
+		}
+		for (int i = 4; i < 9; i++)
+		{
+			wallObjList.Add(allGrid[6, i]);
+		}
+
+		for (int i = 5; i < 13; i++)
+		{
+			wallObjList.Add(allGrid[i, 11]);
+		}
+		for (int i = 4; i < 14; i++)
+		{
+			wallObjList.Add(allGrid[i, 2]);
+		}
+
+		for (int i = 6; i < 11; i++)
+		{
+			wallObjList.Add(allGrid[i, 9]);
+		}
+
+		for (int i = 4; i < 11; i++)
+		{
+			wallObjList.Add(allGrid[12, i]);
+		}
+
+		for (int i = 7; i < 12; i++)
+		{
+			wallObjList.Add(allGrid[i, 4]);
+		}
+
+		for (int i = 0; i < wallObjList.Count; i++)
+		{
+			wallObjList[i].GetComponent<Renderer>().material.color = wellColor;
+		}
+
+	}
+
+
     private void Awake()
     {
-        allGrid = new Node[width, height];
-        wallObjList = new List<Node>();
+        createList();
+		initAllGrid();
 
-        closeList = new Stack<Node>();
-        openList = new Hashtable();
-
-        for (int i = 0;i < width; i++)
-        {
-            for(int t = 0;t < height; t++)
-            {
-                allGrid[i, t] = new Node(GameObject.CreatePrimitive(PrimitiveType.Plane));
-                allGrid[i,t].transform.position = new Vector3(i * interval, 0, t * interval);
-                allGrid[i, t].xIndex = i;
-                allGrid[i, t].yIndex = t;
-                allGrid[i, t].transform.name =""+ i + "," + t;
-            }
-        }
-
-        startNode = allGrid[2,0];
-        endNode = allGrid[2, 2];
+        startNode = allGrid[17,16];
+        endNode = allGrid[7, 8];
         curStartNode = startNode;
-
         startNode.GetComponent<Renderer>().material.color = startColor;
         endNode.GetComponent<Renderer>().material.color = endColor;
-
-        wallObjList.Add(allGrid[1, 1]);
-        wallObjList.Add(allGrid[2, 1]);
-        //for (int index = 1; index < 100; index++)
-        //{
-        //    wallObjList.Add(allGrid[3,index]);
-        //}
-        //for (int index = 4; index < 99; index++)
-        //{
-        //    wallObjList.Add(allGrid[index, 41]);
-        //}
-
-
-        for (int i = 0;i < wallObjList.Count; i++)
-        {
-            wallObjList[i].GetComponent<Renderer>().material.color = wellColor;
-        }
-
-
-        //添加不能走的格子
-        for (int i = 0; i < width * height;i++)
-        {
-            var grid = allGrid[(int)(i / width), (int)(i % height)];
-            if(wallObjList.Contains(grid))
-            {
-                closeList.Push(grid);
-            }
-            else
-            {
-                if (!object.ReferenceEquals(grid, startNode))
-                {
-                    string str = String.Format("{0},{1}", (int)(i / width), (int)(i % height));
-                    openList.Add(str, grid);
-                }
-               
-            }
-        }
-
+        initWall();
+        initCloseListAndOpenList();
     }
 
- 
+
+
+
+
+
+
+
     void Start () {
         handle();
+		//foreach(var node in nodes){
+        //    node.GetComponent<Renderer>().material.color = Color.green;
+        //}
     }
 
-    
+
 
     private void handle()
     {
-        Queue<Node> curList =  calCurrentGoGrid(curStartNode);
-        string[] args = new string[] { "all", "up", "endDistance","up" };
+        Queue<Node> curList = calCurrentGoGrid(curStartNode);
+        string[] args = new string[] { "all", "up", "endDistance", "up" };
         curList = sortOn(curList, args);
 
-        if (openList.Count == 0)
+		if (openList.Count == 0)
         {
             return;
         }
@@ -112,52 +166,75 @@ public class NewBehaviourScript : MonoBehaviour {
         {
             return;
         }
-        
-        Node firstStep = null;
+		Node firstStep = null;
+		if (curList.Count > 0)
+		{
+			firstStep = curList.Dequeue();
+		}
 
-        if (curList.Count > 0)
-        {
-            firstStep = curList.Dequeue();
-            var key = String.Format("{0},{1}", firstStep.xIndex, firstStep.yIndex);
-            openList.Remove(key);
-        }
-        
-        if (firstStep != null && isCanGoNode(firstStep, curStartNode))
-        {
 
-            closeList.Push(curStartNode);
-            curStartNode = firstStep;
-            curStartNode.GetComponent<Renderer>().material.color = startColor;
-            nodes.Enqueue(curStartNode);
-        }
+        if (branchNode != null && openList.Contains(string.Format("{0},{1}",branchNode.xIndex,branchNode.yIndex)) && firstStep != null &&firstStep.all > branchNode.all){
+
+   //         var array = nodes.ToArray();
+   //         var list = new List<Node>(array);
+   //         for (int i = list.Count - 1; i >= 0; i--)
+			//{
+				
+   //             if (object.ReferenceEquals(list[i], targetNode))
+   //             {
+   //                 list[i].GetComponent<Renderer>().material.color = Color.blue;
+			//		list.Remove(list[i]);
+   //                 break;
+   //             }
+   //             list[i].GetComponent<Renderer>().material.color = Color.blue;
+			//	list.Remove(list[i]);
+			//}
+            //nodes = new Queue<Node>(list.ToArray());
+
+			curStartNode = targetNode;
+			branchNode = null;
+            targetNode = null;
+        }        
         else
         {
-            if (nodes.Count > 0)
-            {
-                nodes.Dequeue();
-            }
-            if (firstStep != null)
-            {
-                var curkey = String.Format("{0},{1}", firstStep.xIndex, firstStep.yIndex);
-                openList.Add(curkey, firstStep);
-            }
-            var node = closeList.Pop();
-            if (closeList.Contains(curStartNode))
-            {
-                return;
-            }
-            else
-            {
-                curStartNode.GetComponent<Renderer>().material.color = Color.cyan;
+			if (firstStep != null && isCanGoNode(firstStep, curStartNode))
+			{
+                if (curList.Count > 0){
+                    if (firstStep.all == curList.Peek().all){
+                        if (branchNode == null || (branchNode != null && branchNode.all > curList.Peek().all)){
+                            targetNode = firstStep;
+                            branchNode = curList.Peek();
+							branchNode.GetComponent<Renderer>().material.color = Color.blue;                     
+                        }
+					}
 
-            }
-            curStartNode = node;
+                }
+                curStartNode = firstStep;
+				closeList.Push(curStartNode);
+				var key = String.Format("{0},{1}", firstStep.xIndex, firstStep.yIndex);
+                openList.Remove(key);
+
+				curStartNode.GetComponent<Renderer>().material.color = startColor;
+				nodes.Enqueue(curStartNode);
+			}
+			else
+			{
+                if(closeList.Count == 0){
+                    Debug.Log("不是通路");
+                    return;
+                }
+				if (nodes.Count > 0)
+				{
+					nodes.Dequeue();
+				}
+				var node = closeList.Pop();
+				curStartNode.GetComponent<Renderer>().material.color = Color.cyan;
+				curStartNode = node;
+			}
         }
-
-        //handle();
-        Invoke("handle", 0.1f);// 五秒后执行FunctionName这个函数
+		//handle();
+		Invoke("handle", 0.1f);
     }
-
 
 
 
@@ -175,20 +252,16 @@ public class NewBehaviourScript : MonoBehaviour {
         {
             if (openInfo != null)
             {
-                var xValueM = (startNode.xIndex - openInfo.xIndex) * (startNode.xIndex - openInfo.xIndex);
-                var yValueM = (startNode.yIndex - openInfo.yIndex) * (startNode.yIndex - openInfo.yIndex);
-                var difXY = Mathf.Sqrt(xValueM + yValueM);
-                var argXValue = (endNode.xIndex - openInfo.xIndex) * (endNode.xIndex - openInfo.xIndex);
-                var argYValue = (endNode.yIndex - openInfo.yIndex) * (endNode.yIndex - openInfo.yIndex);
-                var difArgXY = Mathf.Sqrt(argXValue + argYValue);
-                var arg = (int)difArgXY / difXY;
-                openInfo.distance = (int)(Mathf.Sqrt(xValueM + yValueM) * arg * 10);
+				var xValueM = (startNode.xIndex - openInfo.xIndex) * (startNode.xIndex - openInfo.xIndex);
+				var yValueM = (startNode.yIndex - openInfo.yIndex) * (startNode.yIndex - openInfo.yIndex);
+				var difXY = Mathf.Sqrt(xValueM + yValueM);
+				var argXValue = (endNode.xIndex - openInfo.xIndex) * (endNode.xIndex - openInfo.xIndex);
+				var argYValue = (endNode.yIndex - openInfo.yIndex) * (endNode.yIndex - openInfo.yIndex);
+				var difArgXY = Mathf.Sqrt(argXValue + argYValue);
+				var arg = (int)difArgXY / difXY;
+				openInfo.distance = (int)(Mathf.Sqrt(xValueM + yValueM) * arg * 10);
 
-                var xEndValueM = (endNode.xIndex - openInfo.xIndex) * (endNode.xIndex - openInfo.xIndex);
-                var yEndValueM = (endNode.yIndex - openInfo.yIndex) * (endNode.yIndex - openInfo.yIndex);
-                var difEndXY = Mathf.Sqrt(xEndValueM + yEndValueM);
-                openInfo.endDistance = Mathf.CeilToInt(difEndXY);
-
+                openInfo.endDistance = (Mathf.Abs(endNode.xIndex - openInfo.xIndex) + Mathf.Abs(endNode.yIndex - openInfo.yIndex)) * 10;
                 openInfo.all = openInfo.distance + openInfo.endDistance;
                 openInfo.setDisplay();
             }
