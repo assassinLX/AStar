@@ -11,10 +11,11 @@ public class Node
     public int all;
     public int distance;
     public int endDistance;
-    public int ceng;
+    public string ceng;
 
     public int xIndex;
     public int yIndex;
+    public Node father;
 
     public Node(GameObject gameObj)
     {
@@ -54,7 +55,7 @@ public class Node
         text.text = all.ToString();
         text1.text = distance.ToString();
         text2.text = endDistance.ToString();
-        text3.text = ceng.ToString();
+        text3.text = ceng;
     }
 
     private Component GetChildComponent(Transform tar, string childName, string comName)

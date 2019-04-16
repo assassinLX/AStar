@@ -7,8 +7,8 @@ using UnityEngine;
 
 public class NewBehaviourScript : MonoBehaviour
 {
-    private const int width = 30;
-    private const int height = 30;
+    private const int width = 20;
+    private const int height = 20;
     private const int wallNum = width * height;
     private const int interval = 15;
 
@@ -24,7 +24,6 @@ public class NewBehaviourScript : MonoBehaviour
 
     public Hashtable openList;
     public Stack<Node> closeList;
-    List<Node> nodes = new List<Node>();
 
 	private void createList()
 	{
@@ -118,7 +117,9 @@ public class NewBehaviourScript : MonoBehaviour
 		{
 			wallObjList.Add(allGrid[i, 4]);
 		}
-        wallObjList.Add(allGrid[8, 7]);
+        //wallObjList.Add(allGrid[7, 7]);
+		wallObjList.Add(allGrid[8, 7]);
+
 		for (int i = 0; i < wallObjList.Count; i++)
 		{
 			wallObjList[i].GetComponent<Renderer>().material.color = wellColor;
@@ -132,7 +133,7 @@ public class NewBehaviourScript : MonoBehaviour
         createList();
 		initAllGrid();
 
-        startNode = allGrid[5, 0];
+        startNode = allGrid[19, 19];
         endNode = allGrid[9, 7];
         curStartNode = startNode;
         startNode.GetComponent<Renderer>().material.color = startColor;
@@ -143,25 +144,40 @@ public class NewBehaviourScript : MonoBehaviour
 
     void Start () {
         handle();
-		foreach(var node in nodes){
-            node.GetComponent<Renderer>().material.color = Color.green;
-        }
     }
 
 
 
+    List<Node> list = new List<Node>();
     private void handle()
     {
-        List<Node> list = calCurrentGoGrid(curStartNode);
+        var aroundNodes = calCurrentGoGrid(curStartNode);
+
+        foreach (var info in aroundNodes){
+
+            if(!list.Contains(info)){
+                info.father = curStartNode;
+                list.Add(info);            
+				info.GetComponent<Renderer>().material.color = Color.grey;
+            }
+        }
+
         string[] args = new string[] { "all", "up","endDistance","up"};
         var curList = list.ToArray();
         sortOn(curList, args);
-		if (openList.Count == 0)
+
+        if (openList.Count == 0)
         {
             return;
         }
         if (isCanGoNode(endNode, curStartNode))
         {
+            Node temp = curStartNode;
+			while (temp != startNode)
+			{
+				temp.GetComponent<Renderer>().material.color = Color.green;
+                temp = temp.father;
+			}
             return;
         }
 		
@@ -171,31 +187,22 @@ public class NewBehaviourScript : MonoBehaviour
 			firstStep = curList[0];
 		}
 
-        if (firstStep != null && isCanGoNode(firstStep, curStartNode))
+        if (firstStep == null){
+            return;
+        }
+
+        if (firstStep != null )
 		{
             curStartNode = firstStep;
 			closeList.Push(curStartNode);
-			var key = String.Format("{0},{1}", firstStep.xIndex, firstStep.yIndex);
+			
+            var key = String.Format("{0},{1}", firstStep.xIndex, firstStep.yIndex);
             openList.Remove(key);
+
 			curStartNode.GetComponent<Renderer>().material.color = startColor;
-            nodes.Add(curStartNode);
+            list.Remove(firstStep);
 		}
-		else
-		{
-            if(closeList.Count == 0){
-                Debug.Log("不是通路");
-                return;
-            }
-			if (nodes.Count > 0)
-			{
-                nodes.RemoveAt(nodes.Count-1);
-			}
-			var node = closeList.Pop();
-			curStartNode.GetComponent<Renderer>().material.color = Color.cyan;
-			curStartNode = node;
-		}
-		handle();
-		//Invoke("handle", 0.1f);
+		Invoke("handle", 0.1f);
     }
 
 
@@ -226,7 +233,10 @@ public class NewBehaviourScript : MonoBehaviour
                 openInfo.endDistance = (Mathf.Abs(endNode.xIndex - openInfo.xIndex) + Mathf.Abs(endNode.yIndex - openInfo.yIndex)) * 10;
                 openInfo.all = openInfo.distance + openInfo.endDistance;
 
-                openInfo.ceng = Mathf.Abs(startNode.xIndex - openInfo.xIndex) + Mathf.Abs(startNode.yIndex - openInfo.yIndex);
+                if(openInfo.father != null){
+                    openInfo.ceng = openInfo.father.transform.name;
+                    
+                }
                 openInfo.setDisplay();
             }
         }
