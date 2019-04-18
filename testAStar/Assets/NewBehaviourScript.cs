@@ -5,170 +5,93 @@ using System.ComponentModel;
 using System.Reflection;
 using UnityEngine;
 
+
+//[ExecuteInEditMode]
 public class NewBehaviourScript : MonoBehaviour
 {
-    private const int width = 50;
-    private const int height = 50;
-    private const int wallNum = width * height;
-    private const int interval = 15;
-
-    public Node[,] allGrid;
+    private int width;
+    private int height;
     public Node startNode;
-    public Node endNode;
     private Node curStartNode;
-
+    public Node endNode;
     public Color startColor = Color.red;
     public Color endColor = Color.yellow;
     public Color wellColor = Color.black;
+
+    public Node[,] allGrid;
     public List<Node> wallObjList;
     public List<Node> openList;
     public List<Node> closeList;
 
-	private void createList()
+
+    private void createList()
 	{
-		allGrid = new Node[width, height];
-		wallObjList = new List<Node>();
         openList = new List<Node>();
         closeList = new List<Node>();
 	}
     
-	private void initAllGrid()
-	{
-		for (int i = 0; i < width; i++)
-		{
-			for (int t = 0; t < height; t++)
-			{
-				allGrid[i, t] = new Node(GameObject.CreatePrimitive(PrimitiveType.Plane));
-				allGrid[i, t].transform.position = new Vector3(i * interval, 0, t * interval);
-				allGrid[i, t].xIndex = i;
-				allGrid[i, t].yIndex = t;
-				allGrid[i, t].transform.name = string.Format("{0},{1}", i, t);
-
-			}
-		}
-	}
-
-
-	private void initWall()
-	{
-
-
-		for (int i = 3; i <= 11; i++)
-		{
-			wallObjList.Add(allGrid[4, i]);
-		}
-		//for (int i = 6; i <= 8; i++)
-		//{
-		//	wallObjList.Add(allGrid[10, i]);
-		//}
-
-		//for (int i = 4; i < 9; i++)
-		//{
-		//	wallObjList.Add(allGrid[6, i]);
-		//}
-
-		for (int i = 5; i < 45; i++)
-		{
-			wallObjList.Add(allGrid[i, 11]);
-		}
-
-        for (int i = 0; i < 4; i++)
-        {
-            wallObjList.Add(allGrid[i, 3]);
-        }
-
-
-        //for (int i = 4; i < 14; i++)
-        //{
-        //	wallObjList.Add(allGrid[i, 2]);
-        //}
-
-        //for (int i = 6; i < 11; i++)
-        //{
-        //	wallObjList.Add(allGrid[i, 9]);
-        //}
-
-        //for (int i = 4; i < 11; i++)
-        //{
-        //	wallObjList.Add(allGrid[12, i]);
-        //}
-
-        //for (int i = 7; i < 12; i++)
-        //{
-        //	wallObjList.Add(allGrid[i, 4]);
-        //}
-        //wallObjList.Add(allGrid[7, 7]);
-        //wallObjList.Add(allGrid[8, 7]);
-
-        for (int i = 0; i < wallObjList.Count; i++)
-		{
-			wallObjList[i].GetComponent<Renderer>().material.color = wellColor;
-		}
-
-	}
-
-
     private void Awake()
     {
         createList();
-		initAllGrid();
-
-        startNode = allGrid[45,45];
-        endNode = allGrid[9, 7];
-        curStartNode = startNode;
-        startNode.GetComponent<Renderer>().material.color = startColor;
-        endNode.GetComponent<Renderer>().material.color = endColor;
-        initWall();
     }
 
-    void Start () {
-        handle();
-    }
-
-
-
-    private void handle()
+    private void Start()
     {
-        calCurrentGoGrid(curStartNode);
-        string[] args = new string[] { "all", "up", "endDistance","up" };
-        sortOn(openList, args);
+        var mapManager = MapManager.GetInstance();
+        allGrid = mapManager.allGrid;
+        wallObjList = mapManager.getWallList();
+        width = mapManager.width;
+        height = mapManager.height;
+    }
 
-        if (openList.Count == 0)
+    private void Update()
+    {
+        if(startNode != null && endNode != null)
         {
-            return;
+            curStartNode = startNode;
+            startNode.GetComponent<Renderer>().material.color = startColor;
+            endNode.GetComponent<Renderer>().material.color = endColor;
+            handleFindNode();
         }
+    }
 
-        if (isCanGoNode(endNode, curStartNode))
+    private void handleFindNode()
+    {
+        do
         {
-            Node temp = curStartNode;
-			while (temp != startNode)
-			{
-				temp.GetComponent<Renderer>().material.color = Color.green;
-                temp = temp.father;
-			}
-            return;
-        }
-		
-        Node firstStep = null;
-        if (openList.Count > 0)
-		{
-			firstStep = openList[0];
-		}
+            calCurrentGoGrid(curStartNode);
+            string[] args = new string[] { "all", "up", "endDistance", "up" };
+            sortOn(openList, args);
+            if (isCanGoNode(endNode, curStartNode))
+            {
+                Node temp = curStartNode;
+                while (temp != startNode)
+                {
+                    temp.GetComponent<Renderer>().material.color = Color.green;
+                    temp = temp.father;
+                }
+                return;
+            }
+            Node firstStep = null;
+            if (openList.Count > 0)
+            {
+                firstStep = openList[0];
+            }
 
-        if (firstStep == null){
-            return;
-        }
+            if (firstStep == null)
+            {
+                return;
+            }
 
-        if (firstStep != null )
-		{
-            curStartNode = firstStep;
-			closeList.Add(curStartNode);
-			
-			curStartNode.GetComponent<Renderer>().material.color = startColor;
-            openList.Remove(firstStep);
-		}
-        Invoke("handle", 0.01f);
-        //handle();
+            if (firstStep != null)
+            {
+                curStartNode = firstStep;
+                closeList.Add(curStartNode);
+                curStartNode.GetComponent<Renderer>().material.color = startColor;
+                openList.Remove(firstStep);
+            }
+
+        } while (openList.Count > 0);
     }
 
 
