@@ -8,10 +8,11 @@ public class Node
 {
     public GameObject obj;
 
-    public int all;
-    public int distance;
-    public int endDistance;
+    public int all = 0;
+    public int distance = 0;
+    public int endDistance = 0;
     public string ceng;
+
 
     public int xIndex;
     public int yIndex;
@@ -22,7 +23,6 @@ public class Node
         obj = gameObj;
     }
 
-    //public bool isCanGo;
 
     public Transform transform
     {
@@ -51,11 +51,13 @@ public class Node
         var text1 = GetChildComponent(objPrefabTrans, "Text (1)", "Text") as Text;
 		var text2 = GetChildComponent(objPrefabTrans, "Text (2)", "Text") as Text;
 		var text3 = GetChildComponent(objPrefabTrans, "Text (3)", "Text") as Text;
+		var text4 = GetChildComponent(objPrefabTrans, "Text (4)", "Text") as Text;
 
         text.text = all.ToString();
         text1.text = distance.ToString();
         text2.text = endDistance.ToString();
         text3.text = ceng;
+        text4.text = transform.name;
     }
 
     private Component GetChildComponent(Transform tar, string childName, string comName)

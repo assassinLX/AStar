@@ -7,8 +7,8 @@ using UnityEngine;
 
 public class NewBehaviourScript : MonoBehaviour
 {
-    private const int width = 20;
-    private const int height = 20;
+    private const int width = 50;
+    private const int height = 50;
     private const int wallNum = width * height;
     private const int interval = 15;
 
@@ -21,20 +21,17 @@ public class NewBehaviourScript : MonoBehaviour
     public Color endColor = Color.yellow;
     public Color wellColor = Color.black;
     public List<Node> wallObjList;
-
-    public Hashtable openList;
-    public Stack<Node> closeList;
+    public List<Node> openList;
+    public List<Node> closeList;
 
 	private void createList()
 	{
 		allGrid = new Node[width, height];
 		wallObjList = new List<Node>();
-		closeList = new Stack<Node>();
-		openList = new Hashtable();
+        openList = new List<Node>();
+        closeList = new List<Node>();
 	}
-
-
-
+    
 	private void initAllGrid()
 	{
 		for (int i = 0; i < width; i++)
@@ -51,76 +48,59 @@ public class NewBehaviourScript : MonoBehaviour
 		}
 	}
 
-	private void initCloseListAndOpenList()
-	{
-		//添加不能走的格子
-		for (int i = 0; i < width * height; i++)
-		{
-			var grid = allGrid[(int)(i / width), (int)(i % height)];
-			if (!wallObjList.Contains(grid))
-			{
-				if (!object.ReferenceEquals(grid, startNode))
-				{
-					string str = String.Format("{0},{1}", (int)(i / width), (int)(i % height));
-					openList.Add(str, grid);
-				}
-
-			}
-		}
-	}
-
 
 	private void initWall()
 	{
-		wallObjList.Add(allGrid[1, 1]);
+
+
 		for (int i = 3; i <= 11; i++)
 		{
 			wallObjList.Add(allGrid[4, i]);
 		}
-		for (int i = 6; i <= 8; i++)
-		{
-			wallObjList.Add(allGrid[10, i]);
-		}
+		//for (int i = 6; i <= 8; i++)
+		//{
+		//	wallObjList.Add(allGrid[10, i]);
+		//}
 
-		for (int i = 4; i < 9; i++)
-		{
-			wallObjList.Add(allGrid[6, i]);
-		}
+		//for (int i = 4; i < 9; i++)
+		//{
+		//	wallObjList.Add(allGrid[6, i]);
+		//}
 
-		for (int i = 5; i < 13; i++)
+		for (int i = 5; i < 45; i++)
 		{
 			wallObjList.Add(allGrid[i, 11]);
 		}
 
-		for (int i = 8; i < 10; i++)
-		{
-			wallObjList.Add(allGrid[i, 6]);
-		}
+        for (int i = 0; i < 4; i++)
+        {
+            wallObjList.Add(allGrid[i, 3]);
+        }
 
 
-		for (int i = 4; i < 14; i++)
-		{
-			wallObjList.Add(allGrid[i, 2]);
-		}
+        //for (int i = 4; i < 14; i++)
+        //{
+        //	wallObjList.Add(allGrid[i, 2]);
+        //}
 
-		for (int i = 6; i < 11; i++)
-		{
-			wallObjList.Add(allGrid[i, 9]);
-		}
+        //for (int i = 6; i < 11; i++)
+        //{
+        //	wallObjList.Add(allGrid[i, 9]);
+        //}
 
-		for (int i = 4; i < 11; i++)
-		{
-			wallObjList.Add(allGrid[12, i]);
-		}
+        //for (int i = 4; i < 11; i++)
+        //{
+        //	wallObjList.Add(allGrid[12, i]);
+        //}
 
-		for (int i = 7; i < 12; i++)
-		{
-			wallObjList.Add(allGrid[i, 4]);
-		}
+        //for (int i = 7; i < 12; i++)
+        //{
+        //	wallObjList.Add(allGrid[i, 4]);
+        //}
         //wallObjList.Add(allGrid[7, 7]);
-		wallObjList.Add(allGrid[8, 7]);
+        //wallObjList.Add(allGrid[8, 7]);
 
-		for (int i = 0; i < wallObjList.Count; i++)
+        for (int i = 0; i < wallObjList.Count; i++)
 		{
 			wallObjList[i].GetComponent<Renderer>().material.color = wellColor;
 		}
@@ -133,13 +113,12 @@ public class NewBehaviourScript : MonoBehaviour
         createList();
 		initAllGrid();
 
-        startNode = allGrid[19, 19];
+        startNode = allGrid[45,45];
         endNode = allGrid[9, 7];
         curStartNode = startNode;
         startNode.GetComponent<Renderer>().material.color = startColor;
         endNode.GetComponent<Renderer>().material.color = endColor;
         initWall();
-        initCloseListAndOpenList();
     }
 
     void Start () {
@@ -148,28 +127,17 @@ public class NewBehaviourScript : MonoBehaviour
 
 
 
-    List<Node> list = new List<Node>();
     private void handle()
     {
-        var aroundNodes = calCurrentGoGrid(curStartNode);
-
-        foreach (var info in aroundNodes){
-
-            if(!list.Contains(info)){
-                info.father = curStartNode;
-                list.Add(info);            
-				info.GetComponent<Renderer>().material.color = Color.grey;
-            }
-        }
-
-        string[] args = new string[] { "all", "up","endDistance","up"};
-        var curList = list.ToArray();
-        sortOn(curList, args);
+        calCurrentGoGrid(curStartNode);
+        string[] args = new string[] { "all", "up", "endDistance","up" };
+        sortOn(openList, args);
 
         if (openList.Count == 0)
         {
             return;
         }
+
         if (isCanGoNode(endNode, curStartNode))
         {
             Node temp = curStartNode;
@@ -182,9 +150,9 @@ public class NewBehaviourScript : MonoBehaviour
         }
 		
         Node firstStep = null;
-        if (curList.Length > 0)
+        if (openList.Count > 0)
 		{
-			firstStep = curList[0];
+			firstStep = openList[0];
 		}
 
         if (firstStep == null){
@@ -194,15 +162,13 @@ public class NewBehaviourScript : MonoBehaviour
         if (firstStep != null )
 		{
             curStartNode = firstStep;
-			closeList.Push(curStartNode);
+			closeList.Add(curStartNode);
 			
-            var key = String.Format("{0},{1}", firstStep.xIndex, firstStep.yIndex);
-            openList.Remove(key);
-
 			curStartNode.GetComponent<Renderer>().material.color = startColor;
-            list.Remove(firstStep);
+            openList.Remove(firstStep);
 		}
-		Invoke("handle", 0.1f);
+        Invoke("handle", 0.01f);
+        //handle();
     }
 
 
@@ -215,34 +181,53 @@ public class NewBehaviourScript : MonoBehaviour
         return value <= 14;
     }
 
-    private void initTestValue(ref List<Node> testList)
+    private void initTestValue(ref List<Node> testList,Node _curStartNode)
     {
         foreach (var openInfo in testList)
         {
             if (openInfo != null)
             {
-                var xValueM = (startNode.xIndex - openInfo.xIndex) * (startNode.xIndex - openInfo.xIndex);
-                var yValueM = (startNode.yIndex - openInfo.yIndex) * (startNode.yIndex - openInfo.yIndex);
-                var difXY = Mathf.Sqrt(xValueM + yValueM);
-                var argXValue = (endNode.xIndex - openInfo.xIndex) * (endNode.xIndex - openInfo.xIndex);
-                var argYValue = (endNode.yIndex - openInfo.yIndex) * (endNode.yIndex - openInfo.yIndex);
-                var difArgXY = Mathf.Sqrt(argXValue + argYValue);
-                var arg = (int)difArgXY / difXY;
-                openInfo.distance = (int)(Mathf.Sqrt(xValueM + yValueM) * arg * 10);
-
-                openInfo.endDistance = (Mathf.Abs(endNode.xIndex - openInfo.xIndex) + Mathf.Abs(endNode.yIndex - openInfo.yIndex)) * 10;
-                openInfo.all = openInfo.distance + openInfo.endDistance;
-
-                if(openInfo.father != null){
-                    openInfo.ceng = openInfo.father.transform.name;
+                var newCost = _curStartNode.distance + GetCost(_curStartNode, openInfo);
+                if (newCost < openInfo.distance || !openList.Contains(openInfo))
+                {
+                    openInfo.distance = newCost;
+                    openInfo.endDistance = GetCost(openInfo, endNode);
+                    openInfo.all = openInfo.distance + openInfo.endDistance;
+                    openInfo.father = _curStartNode;
                     
+                    if (!openList.Contains(openInfo))
+                    {
+                        openList.Add(openInfo);
+                        openInfo.GetComponent<Renderer>().material.color = Color.grey;
+                    }
+                }
+                if (openInfo.father != null){
+                    openInfo.ceng = openInfo.father.transform.name;
                 }
                 openInfo.setDisplay();
             }
         }
     }
 
-    List<Node> calCurrentGoGrid(Node _startNode)
+    int GetCost(Node a, Node b)
+    {
+        //等到两点之间的一个距离（x方向和y方向）
+        int coutX = Mathf.Abs(a.xIndex - b.xIndex);
+        int coutY = Mathf.Abs(a.yIndex - b.yIndex);
+
+        //return (coutX + coutY) * 10;
+        if (coutX > coutY)
+        {
+            return (coutX - coutY) * 10 + coutY * 14;
+        }
+        else
+        {
+            return (coutY - coutX) * 10 + coutX * 14;
+        }
+    }
+
+
+    void calCurrentGoGrid(Node _startNode)
     {
 		List<Node> test = new List<Node>();
 		var x = _startNode.xIndex - 1;
@@ -256,8 +241,8 @@ public class NewBehaviourScript : MonoBehaviour
 			{
 				if (x >= 0 && y >= 0 && x < width && y < height && allGrid[x, y] != null && _startNode != allGrid[x, y])
 				{
-					string str = String.Format("{0},{1}", x, y);
-					if (openList.ContainsKey(str))
+					
+					if (!wallObjList.Contains(allGrid[x, y]) && !closeList.Contains(allGrid[x, y]))
 					{
                         test.Add(allGrid[x, y]);
 					}
@@ -266,8 +251,7 @@ public class NewBehaviourScript : MonoBehaviour
 			}
 			x++;
 		}
-		initTestValue(ref test);
-		return test;
+		initTestValue(ref test,_startNode);
     }
 
 
@@ -284,15 +268,15 @@ public class NewBehaviourScript : MonoBehaviour
         return null;
     }
 
-    void sortOn<T>(T [] array,string [] tags) 
+    void sortOn<T>(List<T> array,string [] tags) 
     {
         var _left = 0;
-        var _right = array.Length - 1;
+        var _right = array.Count - 1;
         quickSort(array, _left,_right,tags);
 
     }
 
-    private void quickSort<T>(T[] array, int left, int right, string [] tags)
+    private void quickSort<T>(List<T> array, int left, int right, string [] tags)
     {
         if (left < right)
         {
@@ -370,43 +354,3 @@ public class NewBehaviourScript : MonoBehaviour
 
     }
 }
-
-
-
-//print("======================closeList===============================" + closeList.Count);
-//foreach (var info in closeList)
-//{
-//    Debug.Log(info.transform.name);
-//}
-//print("======================openList===============================");
-//foreach (var obj in openList.Keys)
-//{
-//    var info = openList[obj] as Node;
-//    Debug.Log(info.transform.name);
-//}
-
-//print("======================openList===============================");
-//foreach (var obj in openList.Keys)
-//{
-//    var info = openList[obj] as Node;
-//    Debug.Log(info.transform.name + "distance: " + info.distance + "all:" + info.all);
-//}
-
-//print("======================closeList===============================");
-//foreach (var info in closeList)
-//{
-//    Debug.Log(info.transform.name + "distance: " + info.distance + "all:" + info.all);
-//}
-
-//print("======================nodes===============================");
-//foreach (var info in nodes)
-//{
-//    Debug.Log(info.transform.name + "distance: " + info.distance + "all:" + info.all);
-//}
-
-//print("======================curList===============================");
-//foreach (var info in curList)
-//{
-//    Debug.Log(info.transform.name + "distance: " + info.distance + "all:" + info.all);
-//}
-

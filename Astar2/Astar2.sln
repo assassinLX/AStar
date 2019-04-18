@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio for Mac
+# Visual Studio 15
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Astar2", "Astar2.csproj", "{D867DF2A-A6E0-E88E-431F-066C87E1C4A0}"
 EndProject
 Global
