@@ -22,8 +22,7 @@ public class Node
     {
         obj = gameObj;
     }
-
-
+    
     public Transform transform
     {
         get
