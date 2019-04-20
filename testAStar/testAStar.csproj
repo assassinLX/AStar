@@ -111,7 +111,17 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\FindNode.cs" />
-    <Compile Include="Assets\MapManager.cs" />
+    <Compile Include="Assets\Json\IJsonWrapper.cs" />
+    <Compile Include="Assets\Json\JsonData.cs" />
+    <Compile Include="Assets\Json\JsonException.cs" />
+    <Compile Include="Assets\Json\JsonMapper.cs" />
+    <Compile Include="Assets\Json\JsonMockWrapper.cs" />
+    <Compile Include="Assets\Json\JsonReader.cs" />
+    <Compile Include="Assets\Json\JsonWriter.cs" />
+    <Compile Include="Assets\Json\Lexer.cs" />
+    <Compile Include="Assets\Json\Netstandard15Polyfill.cs" />
+    <Compile Include="Assets\Json\ParserToken.cs" />
+    <Compile Include="Assets\Maps\MapManager.cs" />
     <Compile Include="Assets\Node.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

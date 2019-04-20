@@ -142,7 +142,7 @@ public class MapManager : EditorWindow
 
 
         strWidth = EditorGUILayout.TextField("横向格子个数 :", strWidth);
-        if(strWidth != ""){
+        if(strWidth != "" && strWidth != null){
             bool isSettingWidth = !Int32.TryParse(strWidth, out _width);
             if(isSettingWidth){
 				Debug.LogErrorFormat("宽度没有设置");
@@ -150,7 +150,7 @@ public class MapManager : EditorWindow
         }
 
         strHeight = EditorGUILayout.TextField("纵向格子个数 :", strHeight);
-		if (strHeight != "")
+		if (strHeight != "" && strHeight != null)
 		{
 			bool isSettingHeight = !Int32.TryParse(strHeight, out _height);
 			if (isSettingHeight)
