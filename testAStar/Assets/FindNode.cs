@@ -90,9 +90,12 @@ public class FindNode : MonoBehaviour
             }
 
         } while (openList.Count > 0);
+
     }
 
-
+    //public List<Node> getPath(){
+        
+    //}
 
     private bool isCanGoNode(Node tagNode,Node curStart)
     {

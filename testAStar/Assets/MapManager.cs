@@ -3,6 +3,7 @@ using UnityEditor;
 using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using System.IO;
+using System;
 
 //[ExecuteInEditMode]
 public class MapManager : EditorWindow
@@ -11,19 +12,6 @@ public class MapManager : EditorWindow
     FindNode findNode;
     private static MapManager window;
     private MapManager(){}
-    public static MapManager GetInstance()
-    {
-        if (window != null)
-        {
-            return window;
-        }
-        else
-        {
-            Setting();
-            return window;
-        }
-    }
-
     private int _width = 30;
     private int _height = 30;
 
@@ -39,12 +27,37 @@ public class MapManager : EditorWindow
             return _height;
         }  
     }
-    private const int interval = 3;
+
+    private string strWidth;
+    private string strHeight;
+	private const int interval = 3;
+
 
     public Node[,] allGrid;
     public List<Node> wallList = new List<Node>();
     public Node startNode;
     public Node endNode;
+	
+    public static MapManager GetInstance()
+	{
+		if (window != null)
+		{
+			return window;
+		}
+		else
+		{
+			Setting();
+			return window;
+		}
+	}
+
+	[MenuItem("MapManager/Setting %m", false, 0)]
+	private static void Setting()
+	{
+		Rect rect = new Rect(100, 100, 120, 300);
+		window = (MapManager)EditorWindow.GetWindowWithRect(typeof(MapManager), rect, false, "Setting");
+		window.Show();
+	}
 
     public Node[,] getAllGrid()
     {
@@ -115,13 +128,7 @@ public class MapManager : EditorWindow
 
     }
 
-    [MenuItem("MapManager/Setting %m",false,0)]
-    private static void Setting()
-    {
-        Rect rect = new Rect(100, 100, 150, 500);
-        window = (MapManager)EditorWindow.GetWindowWithRect(typeof(MapManager),rect,false,"Setting");
-        window.Show();
-    }
+
 
 
     void OnGUI()
@@ -134,17 +141,34 @@ public class MapManager : EditorWindow
         GUILayout.Label("地图设置");
 
 
-        GUILayout.Space(10);
-        findNode = (FindNode)EditorGUILayout.ObjectField("Find Node", findNode, typeof(FindNode), true);
+        strWidth = EditorGUILayout.TextField("横向格子个数 :", strWidth);
+        if(strWidth != ""){
+            bool isSettingWidth = !Int32.TryParse(strWidth, out _width);
+            if(isSettingWidth){
+				Debug.LogErrorFormat("宽度没有设置");
+            }
+        }
 
-        if (GUILayout.Button("生成地图", GUILayout.Width(80), GUILayout.Height(20)))
+        strHeight = EditorGUILayout.TextField("纵向格子个数 :", strHeight);
+		if (strHeight != "")
+		{
+			bool isSettingHeight = !Int32.TryParse(strHeight, out _height);
+			if (isSettingHeight)
+			{
+				Debug.LogErrorFormat("高度没有设置");
+			}
+		}
+
+
+		if (GUILayout.Button("生成地图", GUILayout.Width(80), GUILayout.Height(20)))
         {
-            //EditorApplication.playmodeStateChanged += initAllGrid;
             if (EditorApplication.isPlaying == false)
             {
                 EditorApplication.isPlaying = true;
             }
-            initAllGrid();
+            if(EditorApplication.isPlaying){
+				initAllGrid();
+            }
         }
 
         if (GUILayout.Button("设置Wall", GUILayout.Width(80), GUILayout.Height(20)))
@@ -159,8 +183,8 @@ public class MapManager : EditorWindow
                     wallList.Add(curNode);
                 }
             }
-
         }
+
         if (GUILayout.Button("清理Wall", GUILayout.Width(80), GUILayout.Height(20)))
         {
             Transform[] transforms = Selection.transforms;
@@ -168,7 +192,7 @@ public class MapManager : EditorWindow
             {
                 for (int i = 0; i < wallList.Count; i++)
                 {
-                    if (Object.ReferenceEquals(node,wallList[i].transform))
+                    if (object.ReferenceEquals(node,wallList[i].transform))
                     {
                         node.transform.GetComponent<Renderer>().material.color = Color.white;
                         wallList.RemoveAt(i);
@@ -196,29 +220,35 @@ public class MapManager : EditorWindow
                 endNode.transform.GetComponent<Renderer>().material.color = Color.yellow;
             }
         }
-        if (GUILayout.Button("清理", GUILayout.Width(80), GUILayout.Height(20)))
-        {
-            if (findNode != null)
-            {
-                findNode.clear();
-                clearAllGridNode();
-            }
-        }
 
-        if (GUILayout.Button("开始寻路", GUILayout.Width(80), GUILayout.Height(20)))
-        {
-            if (findNode != null)
-            {
-                if (findNode.openList.Count != 0)
-                {
-                    Debug.LogErrorFormat("需要清理才能寻路");
-                }
-                else
-                {
-                    findNode.settingData();
-                    findNode.handleFindNode();
-                }
-            }
+		
+        GUILayout.Space(10);
+		findNode = (FindNode)EditorGUILayout.ObjectField("Find Node", findNode, typeof(FindNode), true);
+
+        if(findNode != null){
+			if (GUILayout.Button("清理", GUILayout.Width(80), GUILayout.Height(20)))
+			{
+				if (findNode != null)
+				{
+					findNode.clear();
+					clearAllGridNode();
+				}
+			}
+			if (GUILayout.Button("测试寻路", GUILayout.Width(80), GUILayout.Height(20)))
+			{
+				if (findNode != null)
+				{
+					if (findNode.openList.Count != 0)
+					{
+						Debug.LogErrorFormat("需要清理才能寻路");
+					}
+					else
+					{
+						findNode.settingData();
+						findNode.handleFindNode();
+					}
+				}
+			}
         }
     }
 }
